@@ -2,7 +2,7 @@ import { OpenAI } from "openai";
 import * as readline from "readline/promises";
 import { stdin as input, stdout as output } from "process";
 import { z } from "zod";
-import { createActaro, defineAction } from "../src/index.js";
+import { createActaro, defineAction, toAgentResult } from "../src/index.js";
 
 // --- 1. Fake Environments ---
 const db = new Map<string, { id: string; content: string; status: string }>();
@@ -343,21 +343,12 @@ Always inform the user of the final Actaro verification result after using a too
             );
 
             // Inform the AI about the result of the tool call including Actaro's verification
-            let toolResultMessage = "";
-            if (receipt.status === "verified") {
-              toolResultMessage = `Success! Actaro verified the real-world effect. Evidence: ${JSON.stringify(receipt.evidence)}`;
-            } else {
-              toolResultMessage = `Actaro Validation Failed! Status: ${receipt.status}. `;
-              if (receipt.reason)
-                toolResultMessage += `Reason: ${receipt.reason}. `;
-              if (receipt.execution?.error)
-                toolResultMessage += `Error: ${receipt.execution.error}`;
-            }
+            const { toolResult } = toAgentResult(receipt);
 
             messages.push({
               role: "tool",
               tool_call_id: toolCall.id,
-              content: toolResultMessage,
+              content: toolResult,
             });
           } else {
             console.log(`\n⚠️ AI tried to call an unknown tool: ${(toolCall as any).function.name}`);

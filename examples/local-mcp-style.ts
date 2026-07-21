@@ -1,15 +1,15 @@
 import { z } from "zod";
-import { actaro, fromMcpTool } from "actaro";
+import { actaro, fromMcpTool } from "../src/index.js";
 
 const records = new Map<string, string>();
 const action = fromMcpTool({
   name: "local-record-tool",
   input: z.object({ key: z.string(), value: z.string() }),
-  call: ({ key, value }) => {
+  call: ({ key, value }: { key: string; value: string }) => {
     records.set(key, value);
     return { content: [{ type: "text", text: "Record created" }] };
   },
-  verify: ({ key, value }) =>
+  verify: ({ key, value }: { key: string; value: string }) =>
     records.get(key) === value
       ? { status: "verified", evidence: { key, storedValue: records.get(key) } }
       : { status: "failed", reason: "Stored value differs" },

@@ -36,6 +36,7 @@ export interface ActionReceipt {
 export interface ReceiptStore {
   save(receipt: ActionReceipt): Promise<void>;
   get(id: string): Promise<ActionReceipt | undefined>;
+  getByIdempotencyKey?(actionName: string, idempotencyKey: string): Promise<ActionReceipt | undefined>;
   list(): Promise<ActionReceipt[]>;
 }
 

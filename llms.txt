@@ -1,0 +1,9 @@
+# Actaro SDK
+Actaro is an SDK for verifying real-world actions executed by AI agents.
+It provides `ActionReceipt`s as cryptographically-friendly records, idempotency (to prevent accidental double-execution), and structured result feedback loops (`toAgentResult`) for standardizing how LLMs receive the outcome of their actions.
+
+Core components:
+- `createActaro`: Bootstraps an Actaro instance.
+- `defineAction`: Defines an action with input schemas, execution, and verification steps.
+- `ReceiptStore`: Stores receipts with idempotency deduplication.
+- `toAgentResult`: Formats receipts for agent consumption.

@@ -21,6 +21,8 @@ const errorMessage = (error: unknown) => (error instanceof Error ? error.message
 
 export function createActaro(options: ActaroOptions = {}) {
   const store = options.store ?? memoryStore();
+  const ongoingExecutions = new Map<string, Promise<ActionReceipt>>();
+
   return {
     store,
     async run<S extends z.ZodTypeAny, E>(
@@ -29,9 +31,29 @@ export function createActaro(options: ActaroOptions = {}) {
       runOptions: RunOptions = {},
     ): Promise<ActionReceipt> {
       const input = action.input.parse(rawInput) as z.infer<S>;
-      const startedAt = new Date().toISOString();
-      const receipt: ActionReceipt = {
-        id: randomUUID(),
+      const idempotencyKey = action.idempotencyKey?.(input);
+
+      if (idempotencyKey) {
+        const dedupeKey = `${action.name}:${idempotencyKey}`;
+        
+        // 1. Check for concurrent execution
+        if (ongoingExecutions.has(dedupeKey)) {
+          return ongoingExecutions.get(dedupeKey)!;
+        }
+
+        // 2. Check for persisted receipt
+        if (store.getByIdempotencyKey) {
+          const existing = await store.getByIdempotencyKey(action.name, idempotencyKey);
+          if (existing) {
+            return existing;
+          }
+        }
+      }
+
+      const runPromise = (async (): Promise<ActionReceipt> => {
+        const startedAt = new Date().toISOString();
+        const receipt: ActionReceipt = {
+          id: randomUUID(),
         action: {
           name: action.name,
           ...(action.description && { description: action.description }),
@@ -107,6 +129,19 @@ export function createActaro(options: ActaroOptions = {}) {
         await options.hooks?.receiptCreated?.(value);
         return value;
       }
+      })();
+
+      if (idempotencyKey) {
+        const dedupeKey = `${action.name}:${idempotencyKey}`;
+        ongoingExecutions.set(dedupeKey, runPromise);
+        runPromise.finally(() => {
+          if (ongoingExecutions.get(dedupeKey) === runPromise) {
+            ongoingExecutions.delete(dedupeKey);
+          }
+        });
+      }
+
+      return runPromise;
     },
   };
 }
