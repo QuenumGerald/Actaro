@@ -6,6 +6,7 @@ export default defineConfig({
   lastUpdated: true,
   cleanUrls: true,
   ignoreDeadLinks: true,
+  base: '/Actaro/',
   
   themeConfig: {
     nav: [
