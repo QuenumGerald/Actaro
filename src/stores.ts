@@ -37,7 +37,7 @@ export function fileStore(path: string): ReceiptStore {
       await appendFile(path, `${JSON.stringify(receipt)}\n`, "utf8");
     },
     async get(id) {
-      return (await readAll()).findLast((receipt) => receipt.id === id);
+      return (await readAll()).reverse().find((receipt) => receipt.id === id);
     },
     async list() {
       return readAll();

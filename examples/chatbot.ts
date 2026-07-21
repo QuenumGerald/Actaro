@@ -163,7 +163,7 @@ const actionsMap: Record<string, any> = {
 };
 
 // Map actions to OpenAI tools dynamically
-const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
+const tools: any[] = [
   createNoteAction,
   sendEmailAction,
   createAdminAction,
@@ -303,18 +303,18 @@ Always inform the user of the final Actaro verification result after using a too
         temperature: 0.1,
       });
 
-      const responseMessage = response.choices[0].message;
+      const responseMessage = response.choices[0]!.message;
       messages.push(responseMessage);
 
       // Handle tool calls
       if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
         for (const toolCall of responseMessage.tool_calls) {
-          const actionToRun = actionsMap[toolCall.function.name];
+          const actionToRun = actionsMap[(toolCall as any).function.name];
 
           if (actionToRun) {
-            const args = JSON.parse(toolCall.function.arguments);
+            const args = JSON.parse((toolCall as any).function.arguments);
             console.log(
-              `\n🤖 AI wants to call: ${toolCall.function.name}(${JSON.stringify(args)})`,
+              `\n🤖 AI wants to call: ${(toolCall as any).function.name}(${JSON.stringify(args)})`,
             );
 
             console.log(`\n🛡️  Actaro intercepts the tool call to verify its effect...`);
@@ -330,12 +330,12 @@ Always inform the user of the final Actaro verification result after using a too
                   action: receipt.action.name,
                   status: receipt.status,
                   sanitizedInput: receipt.input, // Observe the redaction here!
-                  executionStatus: receipt.execution?.status,
-                  executionResult: receipt.execution?.result, // Observe the redaction here!
+                  executionOutput: receipt.execution?.output, // Observe the redaction here!
+                  executionError: receipt.execution?.error,
                   verificationStatus: receipt.verification?.status,
-                  verificationEvidence: receipt.verification?.evidence,
-                  verificationReason: receipt.verification?.reason,
-                  attempts: receipt.verificationAttempts,
+                  verificationEvidence: receipt.evidence,
+                  verificationReason: receipt.reason,
+                  attempts: receipt.attempts,
                 },
                 null,
                 2,
@@ -345,13 +345,13 @@ Always inform the user of the final Actaro verification result after using a too
             // Inform the AI about the result of the tool call including Actaro's verification
             let toolResultMessage = "";
             if (receipt.status === "verified") {
-              toolResultMessage = `Success! Actaro verified the real-world effect. Evidence: ${JSON.stringify(receipt.verification?.evidence)}`;
+              toolResultMessage = `Success! Actaro verified the real-world effect. Evidence: ${JSON.stringify(receipt.evidence)}`;
             } else {
               toolResultMessage = `Actaro Validation Failed! Status: ${receipt.status}. `;
-              if (receipt.verification?.reason)
-                toolResultMessage += `Reason: ${receipt.verification.reason}. `;
-              if (receipt.verification?.error)
-                toolResultMessage += `Error: ${receipt.verification.error.message}`;
+              if (receipt.reason)
+                toolResultMessage += `Reason: ${receipt.reason}. `;
+              if (receipt.execution?.error)
+                toolResultMessage += `Error: ${receipt.execution.error}`;
             }
 
             messages.push({
@@ -360,7 +360,7 @@ Always inform the user of the final Actaro verification result after using a too
               content: toolResultMessage,
             });
           } else {
-            console.log(`\n⚠️ AI tried to call an unknown tool: ${toolCall.function.name}`);
+            console.log(`\n⚠️ AI tried to call an unknown tool: ${(toolCall as any).function.name}`);
             messages.push({
               role: "tool",
               tool_call_id: toolCall.id,
@@ -375,9 +375,9 @@ Always inform the user of the final Actaro verification result after using a too
           messages: messages,
         });
 
-        const finalContent = finalResponse.choices[0].message.content;
+        const finalContent = finalResponse.choices[0]!.message.content;
         console.log(`\nAI: ${finalContent}`);
-        messages.push(finalResponse.choices[0].message);
+        messages.push(finalResponse.choices[0]!.message);
       } else {
         // Just a normal text response
         console.log(`AI: ${responseMessage.content}`);
