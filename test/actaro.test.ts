@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { createActaro, defineAction, fileStore, memoryStore } from "../src/index.js";
+import { createActaro, defineAction, fileStore, memoryStore, fromMcpTool, toAgentResult } from "../src/index.js";
 
 const input = z.object({ title: z.string().min(1), secret: z.string().optional() });
 
@@ -93,5 +93,86 @@ describe("Actaro", () => {
     expect(await store.get(receipt.id)).toEqual(receipt);
     expect(await store.list()).toEqual([receipt]);
     expect(JSON.parse((await readFile(path, "utf8")).trim())).toEqual(receipt);
+  });
+
+  it("deduplicates concurrent executions with the same idempotencyKey", async () => {
+    let executeCount = 0;
+    const action = defineAction({
+      name: "idempotent-action",
+      input,
+      idempotencyKey: (val) => val.title,
+      execute: async () => {
+        executeCount++;
+        // Simulate an async delay so concurrent calls pile up
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        return "ok";
+      },
+      verify: () => ({ status: "verified" as const }),
+    });
+
+    const client = createActaro();
+    const [receipt1, receipt2, receipt3] = await Promise.all([
+      client.run(action, { title: "Ship" }),
+      client.run(action, { title: "Ship" }),
+      client.run(action, { title: "Ship" })
+    ]);
+
+    // All should be exactly the same receipt
+    expect(receipt1.id).toBe(receipt2.id);
+    expect(receipt2.id).toBe(receipt3.id);
+    // Execute should only have run once
+    expect(executeCount).toBe(1);
+  });
+
+  it("adapts an MCP tool into an action and enforces verification", async () => {
+    let callCount = 0;
+    const action = fromMcpTool({
+      name: "mcp-test",
+      input,
+      call: async () => {
+        callCount++;
+        return { content: [{ type: "text", text: "Fake Success" }] };
+      },
+      verify: (_, output) => {
+        // Enforce real verification
+        return { status: "verified" as const, evidence: output };
+      }
+    });
+
+    const receipt = await createActaro().run(action, { title: "Ship" });
+    expect(callCount).toBe(1);
+    expect(receipt.status).toBe("verified");
+    // The execution output should be the standardized MCP result
+    expect(receipt.execution?.output).toEqual({ content: [{ type: "text", text: "Fake Success" }] });
+  });
+
+  it("formats receipts for LLM tools via toAgentResult", async () => {
+    const action = defineAction({
+      name: "agent-tool",
+      input,
+      execute: () => "ok",
+      verify: () => ({ status: "verified" as const, evidence: { id: "123" } }),
+    });
+
+    const receipt = await createActaro().run(action, { title: "Ship" });
+    const formatted = toAgentResult(receipt);
+    
+    expect(formatted.canClaimCompletion).toBe(true);
+    expect(formatted.toolResult).toContain("Success! Actaro verified the real-world effect.");
+    expect(formatted.toolResult).toContain('"id":"123"');
+
+    const failedAction = defineAction({
+      name: "agent-tool-fail",
+      input,
+      execute: () => { throw new Error("API Down"); },
+      verify: () => ({ status: "pending" as const }),
+    });
+    
+    const failedReceipt = await createActaro().run(failedAction, { title: "Ship" });
+    const failedFormatted = toAgentResult(failedReceipt);
+
+    expect(failedFormatted.canClaimCompletion).toBe(false);
+    expect(failedFormatted.toolResult).toContain("Actaro Validation Failed!");
+    expect(failedFormatted.toolResult).toContain("API Down");
   });
 });

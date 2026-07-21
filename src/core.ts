@@ -33,24 +33,18 @@ export function createActaro(options: ActaroOptions = {}) {
       const input = action.input.parse(rawInput) as z.infer<S>;
       const idempotencyKey = action.idempotencyKey?.(input);
 
-      if (idempotencyKey) {
-        const dedupeKey = `${action.name}:${idempotencyKey}`;
-        
-        // 1. Check for concurrent execution
-        if (ongoingExecutions.has(dedupeKey)) {
-          return ongoingExecutions.get(dedupeKey)!;
-        }
+      const dedupeKey = idempotencyKey ? `${action.name}:${idempotencyKey}` : undefined;
 
-        // 2. Check for persisted receipt
-        if (store.getByIdempotencyKey) {
-          const existing = await store.getByIdempotencyKey(action.name, idempotencyKey);
-          if (existing) {
-            return existing;
-          }
-        }
+      if (dedupeKey && ongoingExecutions.has(dedupeKey)) {
+        return ongoingExecutions.get(dedupeKey)!;
       }
 
       const runPromise = (async (): Promise<ActionReceipt> => {
+        if (dedupeKey && store.getByIdempotencyKey) {
+          const existing = await store.getByIdempotencyKey(action.name, idempotencyKey!);
+          if (existing) return existing;
+        }
+
         const startedAt = new Date().toISOString();
         const receipt: ActionReceipt = {
           id: randomUUID(),
