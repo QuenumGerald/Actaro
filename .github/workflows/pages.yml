@@ -36,34 +36,25 @@ jobs:
 
       - name: Build site contents
         run: |
-          # Create docs folder
-          mkdir -p docs
+          # Create docs/guide folder
+          mkdir -p docs/guide
 
-          # Copy README to be the main page
-          cp README.md docs/index.md
+          # Copy README to be the guide
+          cp README.md docs/guide/introduction.md
 
-          # Add link to API doc to the main page
-          echo -e "\n\n## API Documentation\n\n[View the full API Documentation here](./api/)" >> docs/index.md
-
-          # Generate API documentation with typedoc and markdown plugin
+          # Generate API documentation with typedoc
           npx typedoc --out docs/api src/index.ts --plugin typedoc-plugin-markdown --readme none --githubPages false --hideGenerator
 
-          # Create Jekyll config
-          echo "theme: jekyll-theme-primer" > docs/_config.yml
-          echo "title: Actaro" >> docs/_config.yml
-          echo "description: Verify that AI agent actions produced their intended real-world effects." >> docs/_config.yml
+          # Build VitePress
+          npx vitepress build docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./docs
-          destination: ./_site
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
