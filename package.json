@@ -25,6 +25,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "docs:build": "typedoc --out docs/api src/index.ts --plugin typedoc-plugin-markdown --readme none --githubPages false --hideGenerator --skipErrorChecking",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
@@ -45,8 +46,12 @@
     "@eslint/js": "^9.31.0",
     "@types/node": "^20.19.9",
     "eslint": "^9.31.0",
+    "openai": "^6.48.0",
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
+    "tsx": "^4.23.1",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vitest": "^3.2.4"

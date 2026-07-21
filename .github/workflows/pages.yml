@@ -1,0 +1,70 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site contents
+        run: |
+          # Create docs folder
+          mkdir -p docs
+
+          # Copy README to be the main page
+          cp README.md docs/index.md
+
+          # Add link to API doc to the main page
+          echo -e "\n\n## API Documentation\n\n[View the full API Documentation here](./api/)" >> docs/index.md
+
+          # Generate API documentation with typedoc and markdown plugin
+          npx typedoc --out docs/api src/index.ts --plugin typedoc-plugin-markdown --readme none --githubPages false --hideGenerator
+
+          # Create Jekyll config
+          echo "theme: jekyll-theme-primer" > docs/_config.yml
+          echo "title: Actaro" >> docs/_config.yml
+          echo "description: Verify that AI agent actions produced their intended real-world effects." >> docs/_config.yml
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
