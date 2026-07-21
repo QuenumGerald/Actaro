@@ -1,6 +1,9 @@
 import type { ActionReceipt } from "./types.js";
 
-export function toAgentResult(receipt: ActionReceipt): { toolResult: string; canClaimCompletion: boolean } {
+export function toAgentResult(receipt: ActionReceipt): {
+  toolResult: string;
+  canClaimCompletion: boolean;
+} {
   let toolResultMessage = "";
 
   if (receipt.status === "verified") {

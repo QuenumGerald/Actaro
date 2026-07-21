@@ -2,7 +2,6 @@
   --vp-c-brand-1: #10b981; /* Emerald */
   --vp-c-brand-2: #059669;
   --vp-c-brand-3: #047857;
-  
 }
 
 .VPHero {
@@ -10,12 +9,13 @@
   margin-bottom: 2rem;
 }
 
-
 .VPFeature {
   background: var(--vp-c-bg-soft) !important;
   border: 1px solid var(--vp-c-divider) !important;
   backdrop-filter: blur(10px);
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  transition:
+    transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 
 .VPFeature:hover {

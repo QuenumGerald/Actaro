@@ -13,9 +13,9 @@ export function memoryStore(): ReceiptStore {
       return value && structuredClone(value);
     },
     async getByIdempotencyKey(actionName, idempotencyKey) {
-      const value = [...receipts.values()].reverse().find(
-        (r) => r.action.name === actionName && r.action.idempotencyKey === idempotencyKey
-      );
+      const value = [...receipts.values()]
+        .reverse()
+        .find((r) => r.action.name === actionName && r.action.idempotencyKey === idempotencyKey);
       return value && structuredClone(value);
     },
     async list() {
@@ -46,9 +46,12 @@ export function fileStore(path: string): ReceiptStore {
       return (await readAll()).reverse().find((receipt) => receipt.id === id);
     },
     async getByIdempotencyKey(actionName, idempotencyKey) {
-      return (await readAll()).reverse().find(
-        (receipt) => receipt.action.name === actionName && receipt.action.idempotencyKey === idempotencyKey
-      );
+      return (await readAll())
+        .reverse()
+        .find(
+          (receipt) =>
+            receipt.action.name === actionName && receipt.action.idempotencyKey === idempotencyKey,
+        );
     },
     async list() {
       return readAll();

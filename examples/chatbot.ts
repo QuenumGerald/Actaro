@@ -351,7 +351,9 @@ Always inform the user of the final Actaro verification result after using a too
               content: toolResult,
             });
           } else {
-            console.log(`\n⚠️ AI tried to call an unknown tool: ${(toolCall as any).function.name}`);
+            console.log(
+              `\n⚠️ AI tried to call an unknown tool: ${(toolCall as any).function.name}`,
+            );
             messages.push({
               role: "tool",
               tool_call_id: toolCall.id,

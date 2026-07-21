@@ -3,7 +3,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { createActaro, defineAction, fileStore, memoryStore, fromMcpTool, toAgentResult } from "../src/index.js";
+import {
+  createActaro,
+  defineAction,
+  fileStore,
+  memoryStore,
+  fromMcpTool,
+  toAgentResult,
+} from "../src/index.js";
 
 const input = z.object({ title: z.string().min(1), secret: z.string().optional() });
 
@@ -114,7 +121,7 @@ describe("Actaro", () => {
     const [receipt1, receipt2, receipt3] = await Promise.all([
       client.run(action, { title: "Ship" }),
       client.run(action, { title: "Ship" }),
-      client.run(action, { title: "Ship" })
+      client.run(action, { title: "Ship" }),
     ]);
 
     // All should be exactly the same receipt
@@ -136,14 +143,16 @@ describe("Actaro", () => {
       verify: (_, output) => {
         // Enforce real verification
         return { status: "verified" as const, evidence: output };
-      }
+      },
     });
 
     const receipt = await createActaro().run(action, { title: "Ship" });
     expect(callCount).toBe(1);
     expect(receipt.status).toBe("verified");
     // The execution output should be the standardized MCP result
-    expect(receipt.execution?.output).toEqual({ content: [{ type: "text", text: "Fake Success" }] });
+    expect(receipt.execution?.output).toEqual({
+      content: [{ type: "text", text: "Fake Success" }],
+    });
   });
 
   it("formats receipts for LLM tools via toAgentResult", async () => {
@@ -156,7 +165,7 @@ describe("Actaro", () => {
 
     const receipt = await createActaro().run(action, { title: "Ship" });
     const formatted = toAgentResult(receipt);
-    
+
     expect(formatted.canClaimCompletion).toBe(true);
     expect(formatted.toolResult).toContain("Success! Actaro verified the real-world effect.");
     expect(formatted.toolResult).toContain('"id":"123"');
@@ -164,10 +173,12 @@ describe("Actaro", () => {
     const failedAction = defineAction({
       name: "agent-tool-fail",
       input,
-      execute: () => { throw new Error("API Down"); },
+      execute: () => {
+        throw new Error("API Down");
+      },
       verify: () => ({ status: "pending" as const }),
     });
-    
+
     const failedReceipt = await createActaro().run(failedAction, { title: "Ship" });
     const failedFormatted = toAgentResult(failedReceipt);
 
