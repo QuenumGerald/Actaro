@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -8,7 +8,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": ".",
+    "paths": {
+      "actaro": ["./src/index.ts"]
+    }
   },
   "include": ["src", "test", "examples", "tsup.config.ts", "vitest.config.ts"]
 }

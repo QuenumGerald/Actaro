@@ -37,6 +37,7 @@ export interface ReceiptStore {
   save(receipt: ActionReceipt): Promise<void>;
   get(id: string): Promise<ActionReceipt | undefined>;
   list(): Promise<ActionReceipt[]>;
+  findByIdempotencyKey?(key: string): Promise<ActionReceipt | undefined>;
 }
 
 export interface ActaroHooks {

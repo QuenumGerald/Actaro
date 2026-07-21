@@ -15,6 +15,10 @@ export function memoryStore(): ReceiptStore {
     async list() {
       return [...receipts.values()].map((item) => structuredClone(item));
     },
+    async findByIdempotencyKey(key) {
+      const match = [...receipts.values()].find((r) => r.action.idempotencyKey === key);
+      return match && structuredClone(match);
+    },
   };
 }
 
@@ -41,6 +45,9 @@ export function fileStore(path: string): ReceiptStore {
     },
     async list() {
       return readAll();
+    },
+    async findByIdempotencyKey(key) {
+      return (await readAll()).findLast((receipt) => receipt.action.idempotencyKey === key);
     },
   };
 }

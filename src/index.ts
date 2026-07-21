@@ -1,4 +1,4 @@
-export { actaro, createActaro, defineAction } from "./core.js";
+export { actaro, createActaro, defineAction, toAgentResult } from "./core.js";
 export { fromMcpTool } from "./mcp.js";
 export { fileStore, memoryStore } from "./stores.js";
 export type { McpToolAdapter } from "./mcp.js";

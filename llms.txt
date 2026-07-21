@@ -1,0 +1,28 @@
+# Actaro
+
+Actaro is a small TypeScript SDK that verifies whether an AI agent action actually changed real state. It does not trust a tool's success message: it executes the action, reads the state again through a separate `verify` function, and emits a JSON-serializable receipt containing the evidence.
+
+## Quick Start
+
+```ts
+import { actaro, defineAction, toAgentResult } from "actaro";
+import { z } from "zod";
+
+const action = defineAction({
+  name: "create-task",
+  input: z.object({ title: z.string().min(1) }),
+  idempotencyKey: ({ title }) => `task-${title}`,
+  execute: ({ title }) => taskApi.create({ title }),
+  verify: async ({ title }) => {
+    const task = await taskApi.findByTitle(title);
+    return task
+      ? { status: "verified", evidence: { id: task.id, state: task.state } }
+      : { status: "pending", reason: "Task not visible yet" };
+  },
+});
+
+const receipt = await actaro.run(action, { title: "Publish release notes" });
+const agentResult = toAgentResult(receipt);
+// agentResult.message contains a string safe to return to the AI Agent
+// agentResult.canClaimCompletion is a boolean indicating success
+```
