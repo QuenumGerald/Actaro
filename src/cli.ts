@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { fileStore } from "./stores.js";
 
 const [command, path, id] = process.argv.slice(2);
