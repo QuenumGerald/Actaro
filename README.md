@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./docs/public/logo.png" alt="Actaro Logo" width="160" />
+</p>
+
 # Actaro
 
 Actaro is a small TypeScript SDK that verifies whether an AI agent action actually changed real state. It does not trust a tool's success message: it executes the action, reads the state again through a separate `verify` function, and emits a JSON-serializable receipt containing the evidence.

@@ -5,6 +5,9 @@ hero:
   name: "Actaro"
   text: "Verifiable AI Agent Actions"
   tagline: Verify that AI agent actions actually produced their intended real-world effects. Don't just trust the LLM.
+  image:
+    src: /logo.png
+    alt: Actaro Logo
   actions:
     - theme: brand
       text: Get Started

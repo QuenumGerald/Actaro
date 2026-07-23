@@ -7,8 +7,10 @@ export default defineConfig({
   cleanUrls: true,
   ignoreDeadLinks: true,
   base: "/Actaro/",
+  head: [["link", { rel: "icon", href: "/Actaro/logo.png" }]],
 
   themeConfig: {
+    logo: "/logo.png",
     nav: [
       { text: "Home", link: "/" },
       { text: "Guide", link: "/guide/introduction" },
