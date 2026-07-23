@@ -44,7 +44,7 @@ import { createActaro, fileStore } from "actaro";
 const client = createActaro({ store: fileStore("./data/receipts.jsonl") });
 ```
 
-`ReceiptStore` has asynchronous `save`, `get`, and `list` methods. `memoryStore()` and append-only JSONL `fileStore(path)` are included. Read persisted receipts with `actaro list ./data/receipts.jsonl` or `actaro get ./data/receipts.jsonl <id>`.
+`ReceiptStore` has asynchronous `save`, `get`, `list`, and `getByIdempotencyKey` methods. `memoryStore()` and append-only JSONL `fileStore(path)` are included. Read persisted receipts with `actaro list ./data/receipts.jsonl` or `actaro get ./data/receipts.jsonl <id>`. Concurrent requests with matching idempotency keys are automatically deduplicated.
 
 ## Security and redaction
 
@@ -59,6 +59,20 @@ Redaction is a safety aid, not a substitute for minimizing collected data, acces
 ## MCP tools
 
 `fromMcpTool()` adapts a tool call into an action. Its `call` function invokes the MCP-style tool, while its required `verify` function independently reads real state. A textual tool response is never evidence by itself. See `examples/local-mcp-style.ts`.
+
+## Agent Feedback
+
+Format receipts directly for LLM tools using `toAgentResult`:
+
+```ts
+import { toAgentResult } from "actaro";
+
+const receipt = await actaro.run(action, input);
+const { toolResult, canClaimCompletion } = toAgentResult(receipt);
+
+// Send toolResult back to the LLM (OpenAI, DeepSeek, Anthropic, etc.)
+// canClaimCompletion is true only if the action was verified
+```
 
 ## Actaro versus Temporal
 
