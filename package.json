@@ -1,5 +1,5 @@
 {
-  "name": "actaro",
+  "name": "actaro-sdk",
   "version": "0.1.0",
   "description": "Verify that AI agent actions produced their intended real-world effects.",
   "type": "module",
